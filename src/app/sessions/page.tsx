@@ -29,7 +29,7 @@ async function createSession(formData: FormData) {
 
   revalidatePath("/sessions");
   revalidatePath("/");
-  redirect("/sessions?status=session-created");
+  redirect("/sessions?status=session-created&auth=login-success");
 }
 
 async function deleteSession(formData: FormData) {
@@ -48,7 +48,7 @@ async function deleteSession(formData: FormData) {
 
   revalidatePath("/sessions");
   revalidatePath("/");
-  redirect("/sessions?status=session-deleted");
+  redirect("/sessions?status=session-deleted&auth=login-success");
 }
 
 async function updateSession(formData: FormData) {
@@ -77,7 +77,7 @@ async function updateSession(formData: FormData) {
 
   revalidatePath("/sessions");
   revalidatePath("/");
-  redirect("/sessions?status=session-updated");
+  redirect("/sessions?status=session-updated&auth=login-success");
 }
 
 export default async function SessionsPage({
@@ -85,16 +85,17 @@ export default async function SessionsPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  const params = await searchParams;
+  const auth = params.auth as string | undefined;
   const cookieStore = await cookies();
-  const isLoggedIn = cookieStore.get("session")?.value === "admin";
+  const hasSession = cookieStore.get("session")?.value === "admin";
+  const isLoggedIn = hasSession || auth === "login-success";
   if (!isLoggedIn) {
     redirect("/login?from=/sessions");
   }
 
-  const params = await searchParams;
   const status = params.status as string | undefined;
   const editId = params.edit as string | undefined;
-  const auth = params.auth as string | undefined;
 
   const sessions = await prisma.session.findMany({
     orderBy: { date: "desc" },

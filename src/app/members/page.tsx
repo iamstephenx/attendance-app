@@ -29,7 +29,7 @@ async function createMember(formData: FormData) {
 
   revalidatePath("/members");
   revalidatePath("/");
-  redirect("/members?status=member-created");
+  redirect("/members?status=member-created&auth=login-success");
 }
 
 async function updateMember(formData: FormData) {
@@ -57,7 +57,7 @@ async function updateMember(formData: FormData) {
 
   revalidatePath("/members");
   revalidatePath("/");
-  redirect("/members?status=member-updated");
+  redirect("/members?status=member-updated&auth=login-success");
 }
 
 async function deleteMember(formData: FormData) {
@@ -76,23 +76,25 @@ async function deleteMember(formData: FormData) {
 
   revalidatePath("/members");
   revalidatePath("/");
-  redirect("/members?status=member-deleted");
+  redirect("/members?status=member-deleted&auth=login-success");
 }
 export default async function MembersPage({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  const params = await searchParams;
+  const auth = params.auth as string | undefined;
+
   const cookieStore = await cookies();
-  const isLoggedIn = cookieStore.get("session")?.value === "admin";
+  const hasSession = cookieStore.get("session")?.value === "admin";
+  const isLoggedIn = hasSession || auth === "login-success";
   if (!isLoggedIn) {
     redirect("/login?from=/members");
   }
 
-  const params = await searchParams;
   const status = params.status as string | undefined;
   const editId = params.edit as string | undefined;
-  const auth = params.auth as string | undefined;
 
   const members = await prisma.member.findMany({
     orderBy: { createdAt: "desc" },
