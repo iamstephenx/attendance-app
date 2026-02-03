@@ -16,7 +16,9 @@ async function login(formData: FormData) {
       path: "/",
     });
 
-    redirect(from || "/");
+    const target = from || "/";
+    const sep = target.includes("?") ? "&" : "?";
+    redirect(`${target}${sep}auth=login-success`);
   }
 
   const search = new URLSearchParams();
@@ -28,9 +30,15 @@ async function login(formData: FormData) {
   redirect(`/login?${search.toString()}`);
 }
 
-export default function LoginPage({ searchParams }: any) {
-  const error = searchParams?.error;
-  const from = searchParams?.from || "/";
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = await searchParams;
+  const error = params.error as string | undefined;
+  const auth = params.auth as string | undefined;
+  const from = (params.from as string | undefined) || "/";
 
   return (
     <div className="flex min-h-[60vh] items-center justify-center">
@@ -42,8 +50,14 @@ export default function LoginPage({ searchParams }: any) {
           Use the admin credentials to access the attendance dashboard.
         </p>
 
+        {auth === "logout-success" && (
+          <p className="alert-auto-dismiss mt-3 rounded-md border border-emerald-500/40 bg-emerald-950/40 px-3 py-2 text-xs text-emerald-100">
+            You have been logged out.
+          </p>
+        )}
+
         {error === "invalid" && (
-          <p className="mt-3 rounded-md border border-red-500/40 bg-red-950/40 px-3 py-2 text-xs text-red-100">
+          <p className="alert-auto-dismiss mt-3 rounded-md border border-red-500/40 bg-red-950/40 px-3 py-2 text-xs text-red-100">
             Invalid username or password. Try again.
           </p>
         )}

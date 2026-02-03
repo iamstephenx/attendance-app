@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { toTitleCase } from "@/lib/text";
 import { MemberRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import Link from "next/link";
 
 async function createMember(formData: FormData) {
   "use server";
@@ -25,13 +27,73 @@ async function createMember(formData: FormData) {
   });
 
   revalidatePath("/members");
+  revalidatePath("/");
+  redirect("/members?status=member-created");
 }
 
-export default async function MembersPage() {
+async function updateMember(formData: FormData) {
+  "use server";
+
+  const id = formData.get("id")?.toString();
+  const rawName = formData.get("name")?.toString().trim();
+  const email = formData.get("email")?.toString().trim();
+  const role = (formData.get("role")?.toString() as MemberRole) ?? MemberRole.STUDENT;
+
+  if (!id || !rawName) {
+    return;
+  }
+
+  const name = toTitleCase(rawName);
+
+  await prisma.member.update({
+    where: { id },
+    data: {
+      name,
+      email: email || null,
+      role,
+    },
+  });
+
+  revalidatePath("/members");
+  revalidatePath("/");
+  redirect("/members?status=member-updated");
+}
+
+async function deleteMember(formData: FormData) {
+  "use server";
+
+  const id = formData.get("id")?.toString();
+  if (!id) {
+    return;
+  }
+
+  await prisma.attendance.deleteMany({ where: { memberId: id } });
+
+  await prisma.member.delete({
+    where: { id },
+  });
+
+  revalidatePath("/members");
+  revalidatePath("/");
+  redirect("/members?status=member-deleted");
+}
+export default async function MembersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = await searchParams;
+  const status = params.status as string | undefined;
+  const editId = params.edit as string | undefined;
+  const auth = params.auth as string | undefined;
+
   const members = await prisma.member.findMany({
     orderBy: { createdAt: "desc" },
     include: { attendances: true },
   });
+
+  const editingMember =
+    editId ? members.find((m: any) => m.id === editId) ?? null : null;
 
   return (
     <div className="space-y-6">
@@ -46,16 +108,43 @@ export default async function MembersPage() {
         </div>
       </div>
 
+      {auth === "login-success" && (
+        <div className="alert-auto-dismiss rounded-md border border-emerald-500/40 bg-emerald-950/40 px-3 py-2 text-xs text-emerald-100">
+          Logged in successfully.
+        </div>
+      )}
+
+      {status === "member-created" && (
+        <div className="alert-auto-dismiss rounded-md border border-emerald-500/40 bg-emerald-950/40 px-3 py-2 text-xs text-emerald-100">
+          Member added successfully.
+        </div>
+      )}
+      {status === "member-updated" && (
+        <div className="alert-auto-dismiss rounded-md border border-emerald-500/40 bg-emerald-950/40 px-3 py-2 text-xs text-emerald-100">
+          Member updated successfully.
+        </div>
+      )}
+      {status === "member-deleted" && (
+        <div className="alert-auto-dismiss rounded-md border border-red-500/40 bg-red-950/40 px-3 py-2 text-xs text-red-100">
+          Member deleted successfully.
+        </div>
+      )}
+
       <div className="grid gap-4 md:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)]">
         <form
-          action={createMember}
+          action={editingMember ? updateMember : createMember}
           className="rounded-xl border border-white/10 bg-slate-900/60 p-4 sm:p-5"
         >
-          <h2 className="text-sm font-semibold tracking-tight">Add member</h2>
+          <h2 className="text-sm font-semibold tracking-tight">
+            {editingMember ? "Edit member" : "Add member"}
+          </h2>
           <p className="mt-1 text-xs text-slate-400">
             Create a new student or team member that you can check in to
             sessions.
           </p>
+          {editingMember && (
+            <input type="hidden" name="id" value={editingMember.id} />
+          )}
 
           <div className="mt-4 space-y-3 text-sm">
             <div className="space-y-1">
@@ -65,6 +154,7 @@ export default async function MembersPage() {
               <input
                 id="name"
                 name="name"
+                defaultValue={editingMember?.name ?? ""}
                 required
                 className="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 outline-none ring-emerald-500/40 focus:border-emerald-400 focus:ring capitalize"
                 placeholder="e.g. Juan Dela Cruz"
@@ -78,6 +168,7 @@ export default async function MembersPage() {
                 id="email"
                 name="email"
                 type="email"
+                defaultValue={editingMember?.email ?? ""}
                 className="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 outline-none ring-emerald-500/40 focus:border-emerald-400 focus:ring"
                 placeholder="name@example.com"
               />
@@ -90,7 +181,7 @@ export default async function MembersPage() {
                 id="role"
                 name="role"
                 className="w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 outline-none ring-emerald-500/40 focus:border-emerald-400 focus:ring"
-                defaultValue={MemberRole.STUDENT}
+                defaultValue={editingMember?.role ?? MemberRole.STUDENT}
               >
                 <option value={MemberRole.STUDENT}>Student</option>
                 <option value={MemberRole.MEMBER}>Member</option>
@@ -98,12 +189,22 @@ export default async function MembersPage() {
             </div>
           </div>
 
-          <button
-            type="submit"
-            className="mt-4 inline-flex w-full items-center justify-center rounded-lg bg-emerald-500 px-3 py-2 text-sm font-semibold text-emerald-950 shadow-sm shadow-emerald-500/40 transition hover:bg-emerald-400"
-          >
-            Save member
-          </button>
+          <div className="mt-4 flex items-center justify-between gap-2">
+            <button
+              type="submit"
+              className="inline-flex flex-1 items-center justify-center rounded-lg bg-emerald-500 px-3 py-2 text-sm font-semibold text-emerald-950 shadow-sm shadow-emerald-500/40 transition hover:bg-emerald-400"
+            >
+              {editingMember ? "Update member" : "Save member"}
+            </button>
+            {editingMember && (
+              <Link
+                href="/members"
+                className="rounded-lg border border-white/20 px-3 py-2 text-xs font-medium text-slate-200 hover:border-slate-300"
+              >
+                Cancel
+              </Link>
+            )}
+          </div>
         </form>
 
         <div className="rounded-xl border border-white/10 bg-slate-900/60 p-4 sm:p-5">
@@ -119,13 +220,14 @@ export default async function MembersPage() {
                   <th className="py-2 pr-4">Role</th>
                   <th className="py-2 pr-4 text-right">Sessions attended</th>
                   <th className="py-2 pr-4 text-right">Avg engagement</th>
+                  <th className="py-2 pr-0 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {members.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={4}
+                      colSpan={5}
                       className="py-6 text-center text-xs text-slate-500"
                     >
                       No members yet. Add your first member using the form on
@@ -171,6 +273,25 @@ export default async function MembersPage() {
                         </td>
                         <td className="py-2 pr-4 text-right text-slate-100">
                           {avgEngagement.toFixed(2)}
+                        </td>
+                        <td className="py-2 pr-0 text-right">
+                          <div className="flex justify-end gap-2">
+                            <Link
+                              href={`/members?edit=${member.id}`}
+                              className="rounded-full border border-slate-500/40 bg-slate-900/60 px-2.5 py-1 text-[11px] font-medium text-slate-100 hover:border-emerald-400 hover:text-emerald-200"
+                            >
+                              Edit
+                            </Link>
+                            <form action={deleteMember}>
+                              <input type="hidden" name="id" value={member.id} />
+                              <button
+                                type="submit"
+                                className="rounded-full border border-red-500/40 bg-red-950/40 px-2.5 py-1 text-[11px] font-medium text-red-100 hover:bg-red-500/20"
+                              >
+                                Delete
+                              </button>
+                            </form>
+                          </div>
                         </td>
                       </tr>
                     );
