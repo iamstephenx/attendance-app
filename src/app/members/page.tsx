@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { toTitleCase } from "@/lib/text";
 import { MemberRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
@@ -82,6 +83,12 @@ export default async function MembersPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  const cookieStore = await cookies();
+  const isLoggedIn = cookieStore.get("session")?.value === "admin";
+  if (!isLoggedIn) {
+    redirect("/login?from=/members");
+  }
+
   const params = await searchParams;
   const status = params.status as string | undefined;
   const editId = params.edit as string | undefined;
