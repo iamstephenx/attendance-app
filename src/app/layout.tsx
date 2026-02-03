@@ -29,17 +29,10 @@ export default async function RootLayout({
   const cookieStore = await cookies();
   const isLoggedIn = cookieStore.get("session")?.value === "admin";
 
-  const navLinkBase = "hover:text-white";
-  const navLinkDisabled = "pointer-events-none opacity-40 cursor-not-allowed";
-  const navLinkClass = isLoggedIn
-    ? navLinkBase
-    : `${navLinkBase} ${navLinkDisabled}`;
+  const navLinkClass = "hover:text-white";
 
-  const logoutBase =
+  const logoutClass =
     "rounded-full border border-white/20 bg-slate-900/80 px-3 py-1 text-[11px] font-medium text-slate-100 transition hover:border-emerald-400 hover:text-emerald-300";
-  const logoutClass = isLoggedIn
-    ? logoutBase
-    : `${logoutBase} ${navLinkDisabled}`;
 
   return (
     <html lang="en">
