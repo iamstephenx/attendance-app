@@ -2,7 +2,6 @@ import { prisma } from "@/lib/prisma";
 import { toTitleCase } from "@/lib/text";
 import { MemberRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
@@ -85,14 +84,6 @@ export default async function MembersPage({
 }) {
   const params = await searchParams;
   const auth = params.auth as string | undefined;
-
-  const cookieStore = await cookies();
-  const hasSession = cookieStore.get("session")?.value === "admin";
-  const isLoggedIn = hasSession || auth === "login-success";
-  if (!isLoggedIn) {
-    redirect("/login?from=/members");
-  }
-
   const status = params.status as string | undefined;
   const editId = params.edit as string | undefined;
 

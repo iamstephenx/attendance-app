@@ -1,8 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { AttendanceStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 
 async function submitCheckIn(formData: FormData) {
   "use server";
@@ -54,12 +52,6 @@ export default async function CheckInPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const cookieStore = await cookies();
-  const isLoggedIn = cookieStore.get("session")?.value === "admin";
-  if (!isLoggedIn) {
-    redirect("/login?from=/check-in");
-  }
-
   const params = await searchParams;
   const auth = params.auth as string | undefined;
 

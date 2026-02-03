@@ -1,6 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import DashboardCharts from "./_components/dashboard-charts";
 
 type AttendanceTrendPoint = {
@@ -20,12 +18,6 @@ export default async function Home({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const cookieStore = await cookies();
-  const isLoggedIn = cookieStore.get("session")?.value === "admin";
-  if (!isLoggedIn) {
-    redirect("/login?from=/");
-  }
-
   const params = await searchParams;
   const auth = params.auth as string | undefined;
   const [

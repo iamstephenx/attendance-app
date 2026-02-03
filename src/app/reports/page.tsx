@@ -1,6 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 
 function getLastNDaysRange(days: number) {
   const now = new Date();
@@ -15,12 +13,6 @@ export default async function ReportsPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const cookieStore = await cookies();
-  const isLoggedIn = cookieStore.get("session")?.value === "admin";
-  if (!isLoggedIn) {
-    redirect("/login?from=/reports");
-  }
-
   const params = await searchParams;
   const auth = params.auth as string | undefined;
 
