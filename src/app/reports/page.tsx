@@ -14,7 +14,6 @@ export default async function ReportsPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const params = await searchParams;
-  const auth = params.auth as string | undefined;
 
   const { from } = getLastNDaysRange(7);
 
@@ -69,11 +68,6 @@ export default async function ReportsPage({
 
   return (
     <div className="space-y-6">
-      {auth === "login-success" && (
-        <div className="alert-auto-dismiss rounded-md border border-emerald-500/40 bg-emerald-950/40 px-3 py-2 text-xs text-emerald-100">
-          Logged in successfully.
-        </div>
-      )}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">

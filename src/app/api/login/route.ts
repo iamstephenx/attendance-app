@@ -14,7 +14,6 @@ export async function POST(request: NextRequest) {
   if (email === "admin@gmail.com" && password.toLowerCase() === "admin") {
     const targetPath = from || "/";
     const url = new URL(targetPath, request.url);
-    url.searchParams.set("auth", "login-success");
 
     const response = NextResponse.redirect(url);
     response.cookies.set("session", "admin", {

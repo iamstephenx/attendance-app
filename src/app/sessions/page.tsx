@@ -28,7 +28,7 @@ async function createSession(formData: FormData) {
 
   revalidatePath("/sessions");
   revalidatePath("/");
-  redirect("/sessions?status=session-created&auth=login-success");
+  redirect("/sessions?status=session-created");
 }
 
 async function deleteSession(formData: FormData) {
@@ -47,7 +47,7 @@ async function deleteSession(formData: FormData) {
 
   revalidatePath("/sessions");
   revalidatePath("/");
-  redirect("/sessions?status=session-deleted&auth=login-success");
+  redirect("/sessions?status=session-deleted");
 }
 
 async function updateSession(formData: FormData) {
@@ -76,7 +76,7 @@ async function updateSession(formData: FormData) {
 
   revalidatePath("/sessions");
   revalidatePath("/");
-  redirect("/sessions?status=session-updated&auth=login-success");
+  redirect("/sessions?status=session-updated");
 }
 
 export default async function SessionsPage({
@@ -85,7 +85,6 @@ export default async function SessionsPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const params = await searchParams;
-  const auth = params.auth as string | undefined;
   const status = params.status as string | undefined;
   const editId = params.edit as string | undefined;
 
@@ -110,12 +109,6 @@ export default async function SessionsPage({
           </p>
         </div>
       </div>
-
-      {auth === "login-success" && (
-        <div className="alert-auto-dismiss rounded-md border border-emerald-500/40 bg-emerald-950/40 px-3 py-2 text-xs text-emerald-100">
-          Logged in successfully.
-        </div>
-      )}
 
       {status === "session-created" && (
         <div className="alert-auto-dismiss rounded-md border border-emerald-500/40 bg-emerald-950/40 px-3 py-2 text-xs text-emerald-100">

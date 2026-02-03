@@ -28,7 +28,7 @@ async function createMember(formData: FormData) {
 
   revalidatePath("/members");
   revalidatePath("/");
-  redirect("/members?status=member-created&auth=login-success");
+  redirect("/members?status=member-created");
 }
 
 async function updateMember(formData: FormData) {
@@ -56,7 +56,7 @@ async function updateMember(formData: FormData) {
 
   revalidatePath("/members");
   revalidatePath("/");
-  redirect("/members?status=member-updated&auth=login-success");
+  redirect("/members?status=member-updated");
 }
 
 async function deleteMember(formData: FormData) {
@@ -75,7 +75,7 @@ async function deleteMember(formData: FormData) {
 
   revalidatePath("/members");
   revalidatePath("/");
-  redirect("/members?status=member-deleted&auth=login-success");
+  redirect("/members?status=member-deleted");
 }
 export default async function MembersPage({
   searchParams,
@@ -83,7 +83,6 @@ export default async function MembersPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const params = await searchParams;
-  const auth = params.auth as string | undefined;
   const status = params.status as string | undefined;
   const editId = params.edit as string | undefined;
 
@@ -107,12 +106,6 @@ export default async function MembersPage({
           </p>
         </div>
       </div>
-
-      {auth === "login-success" && (
-        <div className="alert-auto-dismiss rounded-md border border-emerald-500/40 bg-emerald-950/40 px-3 py-2 text-xs text-emerald-100">
-          Logged in successfully.
-        </div>
-      )}
 
       {status === "member-created" && (
         <div className="alert-auto-dismiss rounded-md border border-emerald-500/40 bg-emerald-950/40 px-3 py-2 text-xs text-emerald-100">
