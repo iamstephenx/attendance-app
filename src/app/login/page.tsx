@@ -1,35 +1,3 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-
-async function login(formData: FormData) {
-  "use server";
-
-  const email = formData.get("email")?.toString().trim();
-  const password = formData.get("password")?.toString() ?? "";
-  const from = formData.get("from")?.toString() || "/";
-
-  if (email === "admin@gmail.com" && password === "admin") {
-    const cookieStore = (await cookies()) as any;
-    cookieStore.set("session", "admin", {
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/",
-    });
-
-    const target = from || "/";
-    const sep = target.includes("?") ? "&" : "?";
-    redirect(`${target}${sep}auth=login-success`);
-  }
-
-  const search = new URLSearchParams();
-  search.set("error", "invalid");
-  if (from) {
-    search.set("from", from);
-  }
-
-  redirect(`/login?${search.toString()}`);
-}
-
 export default async function LoginPage({
   searchParams,
 }: {
@@ -62,7 +30,7 @@ export default async function LoginPage({
           </p>
         )}
 
-        <form action={login} className="mt-4 space-y-3 text-sm">
+        <form action="/login" method="POST" className="mt-4 space-y-3 text-sm">
           <input type="hidden" name="from" value={from} />
 
           <div className="space-y-1">
