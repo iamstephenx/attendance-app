@@ -30,7 +30,7 @@ export default async function LoginPage({
           </p>
         )}
 
-        <form action="/login" method="POST" className="mt-4 space-y-3 text-sm">
+        <form action="/api/login" method="POST" className="mt-4 space-y-3 text-sm">
           <input type="hidden" name="from" value={from} />
 
           <div className="space-y-1">

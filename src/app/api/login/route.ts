@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
   const password = rawPassword ? rawPassword.toString().trim() : "";
   const from = rawFrom ? rawFrom.toString() || "/" : "/";
 
-  if (email === "admin@gmail.com" && password === "admin") {
+  if (email === "admin@gmail.com" && password.toLowerCase() === "admin") {
     const targetPath = from || "/";
     const url = new URL(targetPath, request.url);
     url.searchParams.set("auth", "login-success");

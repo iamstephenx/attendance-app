@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
+import { cookies } from "next/headers";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -18,11 +19,26 @@ export const metadata: Metadata = {
   description: "Track attendance, engagement, and insights for your class or team.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const isLoggedIn = cookieStore.get("session")?.value === "admin";
+
+  const navLinkBase = "hover:text-white";
+  const navLinkDisabled = "pointer-events-none opacity-40 cursor-not-allowed";
+  const navLinkClass = isLoggedIn
+    ? navLinkBase
+    : `${navLinkBase} ${navLinkDisabled}`;
+
+  const logoutBase =
+    "rounded-full border border-white/20 bg-slate-900/80 px-3 py-1 text-[11px] font-medium text-slate-100 transition hover:border-emerald-400 hover:text-emerald-300";
+  const logoutClass = isLoggedIn
+    ? logoutBase
+    : `${logoutBase} ${navLinkDisabled}`;
+
   return (
     <html lang="en">
       <body
@@ -45,26 +61,42 @@ export default function RootLayout({
                 </div>
               </div>
               <nav className="hidden items-center gap-4 text-sm font-medium text-slate-300 sm:flex">
-                <Link href="/" className="hover:text-white">
+                <Link href="/" className={navLinkClass} aria-disabled={!isLoggedIn}>
                   Dashboard
                 </Link>
-                <Link href="/members" className="hover:text-white">
+                <Link
+                  href="/members"
+                  className={navLinkClass}
+                  aria-disabled={!isLoggedIn}
+                >
                   Members
                 </Link>
-                <Link href="/sessions" className="hover:text-white">
+                <Link
+                  href="/sessions"
+                  className={navLinkClass}
+                  aria-disabled={!isLoggedIn}
+                >
                   Sessions
                 </Link>
-                <Link href="/check-in" className="hover:text-white">
+                <Link
+                  href="/check-in"
+                  className={navLinkClass}
+                  aria-disabled={!isLoggedIn}
+                >
                   Check-in
                 </Link>
-                <Link href="/reports" className="hover:text-white">
+                <Link
+                  href="/reports"
+                  className={navLinkClass}
+                  aria-disabled={!isLoggedIn}
+                >
                   Reports
                 </Link>
               </nav>
               <div className="flex items-center gap-3 text-xs text-slate-400">
                 <Link
                   href="/logout"
-                  className="rounded-full border border-white/20 bg-slate-900/80 px-3 py-1 text-[11px] font-medium text-slate-100 transition hover:border-emerald-400 hover:text-emerald-300"
+                  className={logoutClass}
                 >
                   Log out
                 </Link>
